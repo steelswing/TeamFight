@@ -20,12 +20,12 @@ public class SpawnTeamCMD implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         Player player = (Player) sender;
-        if (player instanceof Player && player.hasPermission("teamfight.setspawn")) {
-            if (args[1].equalsIgnoreCase("Blue")) {
+        if (player.hasPermission("teamfight.setspawn")) {
+            if (args[1].equalsIgnoreCase("blue")) {
                 team.getSpawn().get(0).add(player.getLocation());
                 ChatUtil.sendMessage(player, "Вы установили спавн для синих игроков!");
             }
-            if (args[1].equalsIgnoreCase("Red")) {
+            if (args[1].equalsIgnoreCase("red")) {
                 team.getSpawn().get(1).add(player.getLocation());
                 ChatUtil.sendMessage(player, "Вы установили спавн для красных игроков!");
             }

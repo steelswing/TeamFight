@@ -13,7 +13,6 @@ public final class TeamFight extends JavaPlugin {
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(new Round(), this);
         getCommand("setspawnteam").setExecutor(new SpawnTeamCMD());
-
     }
 
     @Override

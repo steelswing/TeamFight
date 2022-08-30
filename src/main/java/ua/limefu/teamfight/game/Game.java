@@ -66,6 +66,7 @@ public class Game {
 
         playersToTeam();
         preparePlayers();
+        round.timer();
 
         round = new Round();
 

@@ -1,13 +1,17 @@
 package ua.limefu.teamfight.game;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import ua.limefu.teamfight.ChatUtil;
 import ua.limefu.teamfight.TeamFight;
 
 public class Round implements Listener {
@@ -18,7 +22,7 @@ public class Round implements Listener {
 
     private final int coolDown = 20;
 
-    private void timer() {
+    public void timer() {
 
         stage = Stage.ROUND_STARTING;
         new BukkitRunnable() {
@@ -35,6 +39,23 @@ public class Round implements Listener {
                 }
             }
         }.runTaskTimer(TeamFight.getInstance(), 0L, 100L);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (stage == Stage.ROUND_GOING) {
+                    stage = Stage.ROUND_ENDED;
+                    arena.sendArenaMessage("Игра окончена!");
+                } else {cancel();}
+            }
+        }.runTaskLater(TeamFight.getInstance(), 2400L);
+    }
+
+    public void gameEnd() {
+        if (stage == Stage.ROUND_ENDED) {
+            team.getPlayers().clear();
+            game.getTeams().clear();
+            stage = Stage.GAME_ENDED;
+        }
     }
 
     @EventHandler
@@ -45,6 +66,16 @@ public class Round implements Listener {
         }
         if (game.getTeams().get(1).contains(player) && game.getTeams().get(1).contains((Player) e.getEntity())) {
             e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onDeathEvent(EntityDeathEvent e) {
+        Player player = (Player) e.getEntity();
+        if (game.getTeams().contains(player)) {
+            player.getInventory().clear();
+            player.teleport((Location) arena.getOnJoinLocation());
+            ChatUtil.sendMessage(player, "Вы проиграли!");
         }
     }
 
