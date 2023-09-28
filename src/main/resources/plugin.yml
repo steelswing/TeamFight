@@ -8,3 +8,6 @@ commands:
     permission: teamfight.setspawn
     permission-message: "You not permission"
     usage: /setspawnteam {team}
+  teamfight:
+
+

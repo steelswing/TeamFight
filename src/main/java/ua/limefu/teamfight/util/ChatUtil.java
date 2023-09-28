@@ -1,8 +1,9 @@
-package ua.limefu.teamfight;
+package ua.limefu.teamfight.util;
 
 import jdk.tools.jlink.plugin.Plugin;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import ua.limefu.teamfight.TeamFight;
 
 public class ChatUtil {
 

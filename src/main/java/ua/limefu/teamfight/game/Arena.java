@@ -1,9 +1,11 @@
 package ua.limefu.teamfight.game;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import ua.limefu.teamfight.ChatUtil;
+import ua.limefu.teamfight.util.ChatUtil;
 import ua.limefu.teamfight.TeamFight;
 
 import java.util.ArrayList;
@@ -13,15 +15,23 @@ import java.util.Map;
 
 public class Arena {
 
+    @Getter
+    @Setter
     private Location lobby;
+
+    @Getter
     private final String name;
     private Stage arenaStage = Stage.CLOSED;
     private final int minPlayers = 2;
     private final int timeToStart = 20;
 
+    @Getter
     private final List<Player> players = new ArrayList<>();
+    @Getter
     private final List<Location> tradernpc = new ArrayList<>();
+    @Getter
     private final Map<Player, Location> onJoinLocation = new HashMap<>();
+    @Getter
     private Game game;
 
 
@@ -36,7 +46,7 @@ public class Arena {
     }
 
     public void join(Player player) {
-        if (ArenaList.get(player) != null) {
+        if (ArenaList.getPlayer(player) != null) {
             ChatUtil.sendMessage(player, "Ты уже на арене!");
             return;
         }
@@ -45,9 +55,8 @@ public class Arena {
             ChatUtil.sendMessage(player, "Арена начата");
         }
 
-        preparePlayer();
         onJoinLocation.put(player, player.getLocation());
-        player.teleport(lobby);
+        player.teleport(getLobby());
         players.add(player);
         sendArenaMessage(player.getDisplayName() + " присоеденился(-ась)");
 
@@ -81,7 +90,7 @@ public class Arena {
     }
 
     public void quit(Player player) {
-        if(ArenaList.get(player) != null) {
+        if(ArenaList.getPlayer(player) != null) {
             ChatUtil.sendMessage(player, "Вы покинули арену!");
         }
         player.teleport(onJoinLocation.get(player));
@@ -90,10 +99,6 @@ public class Arena {
         sendArenaMessage(player.getDisplayName() + " вышел!");
     }
 
-    private void preparePlayer() {
-        // TODO: save inv
-
-    }
 
     public void sendArenaMessage(String message) {
         for (Player player: players) {
@@ -110,48 +115,16 @@ public class Arena {
 
     }
     public boolean launch() {
-        for (Team team: game.getTeams()) {
+        for (Team team : game.getTeams()) {
             if (team.getSpawn() == null) {
                 return false;
             }
         }
-        if (lobby == null || tradernpc.size() < 2) {
+        if (getLobby() == null || tradernpc.size() < 2) {
             return false;
         }
         arenaStage = Stage.WAITING;
         return true;
 
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<Player> getPlayers() {
-        return players;
-    }
-
-    public Location getLobby() {
-        return lobby;
-    }
-
-    public void setLobby(Location lobby) {
-        this.lobby = lobby;
-    }
-
-    public Game getGame() {
-        return game;
-    }
-
-    public int getMinPlayers() {
-        return minPlayers;
-    }
-
-    public List<Location> getTradernpc() {
-        return tradernpc;
-    }
-
-    public Map<Player, Location> getOnJoinLocation() {
-        return onJoinLocation;
     }
 }

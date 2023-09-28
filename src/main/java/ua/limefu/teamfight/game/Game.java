@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import ua.limefu.teamfight.TeamFight;
 import ua.limefu.teamfight.game.command.SpawnTeamCMD;
 
 import java.util.*;
@@ -13,7 +14,6 @@ import java.util.*;
 public class Game {
 
     public final List<Team> teams = new ArrayList<>();
-    private final Map<Player, Integer> moneyMap = new HashMap<>();
     private final Arena arena;
     private Round round;
     private SpawnTeamCMD spawnTeamCMD;
@@ -26,11 +26,7 @@ public class Game {
     }
 
     public void addMoney(Player player, int sum){
-        if (moneyMap.containsKey(player)) {
-            moneyMap.put(player, moneyMap.get(player) + sum);
-        } else {
-            moneyMap.put(player, sum);
-        }
+        TeamFight.getEcon().depositPlayer(player, sum);
     }
 
     private void playersToTeam() {
@@ -66,7 +62,7 @@ public class Game {
 
         playersToTeam();
         preparePlayers();
-        round.timer();
+        getRound().timer();
 
         round = new Round();
 
@@ -98,7 +94,4 @@ public class Game {
         return round;
     }
 
-    public Map<Player, Integer> getMoneyMap() {
-        return moneyMap;
-    }
 }

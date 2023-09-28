@@ -1,17 +1,15 @@
 package ua.limefu.teamfight.game;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import ua.limefu.teamfight.ChatUtil;
+import ua.limefu.teamfight.util.ChatUtil;
 import ua.limefu.teamfight.TeamFight;
 
 public class Round implements Listener {
@@ -45,7 +43,11 @@ public class Round implements Listener {
                 if (stage == Stage.ROUND_GOING) {
                     stage = Stage.ROUND_ENDED;
                     arena.sendArenaMessage("Игра окончена!");
-                } else {cancel();}
+                } else {
+                    if (stage == Stage.ROUND_ENDED) {
+                        cancel();
+                    }
+                }
             }
         }.runTaskLater(TeamFight.getInstance(), 2400L);
     }
@@ -69,11 +71,13 @@ public class Round implements Listener {
         }
     }
 
+
     @EventHandler
     public void onDeathEvent(EntityDeathEvent e) {
         Player player = (Player) e.getEntity();
         if (game.getTeams().contains(player)) {
             player.getInventory().clear();
+            game.getTeams().remove(player);
             player.teleport((Location) arena.getOnJoinLocation());
             ChatUtil.sendMessage(player, "Вы проиграли!");
         }
