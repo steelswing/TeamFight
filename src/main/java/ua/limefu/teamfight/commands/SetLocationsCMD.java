@@ -5,6 +5,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import ua.limefu.teamfight.TeamFight;
+import ua.limefu.teamfight.arena.Arena;
+import ua.limefu.teamfight.arena.ArenaList;
 
 public class SetLocationsCMD implements CommandExecutor {
     @Override
@@ -12,32 +14,32 @@ public class SetLocationsCMD implements CommandExecutor {
 
         if(!(sender instanceof Player))
         {
-            sender.sendMessage(TeamFight.main.NoConsoleAllowed);
+            sender.sendMessage(TeamFight.getInstance().NoConsoleAllowed);
         }
         else
         {
             Player player = (Player)sender;
             if(!player.hasPermission("teamfight.setup"))
             {
-                player.sendMessage(TeamFight.main.NoPermissions);
+                player.sendMessage(TeamFight.getInstance().NoPermissions);
             }
             else
             {
-                if(args.length == 1)
-                {
-                    String locationName = args[0].toLowerCase();
-                    if(locationName.equalsIgnoreCase("red") || locationName.equalsIgnoreCase("blue") || locationName.equalsIgnoreCase("spectator") || locationName.equalsIgnoreCase("lobby") || locationName.equalsIgnoreCase("red2") ||locationName.equalsIgnoreCase("blue2"))
-                    {
-                        TeamFight.filemanager.saveLocation(player.getLocation(), locationName, player);;
-                    }
-                    else
-                    {
-                        player.sendMessage("§cИспользуй: §7/§csetlocation §7<§cRed§7/§cBlue§7/§cRed2§7/§cBlue2§7/§cSpectator§7/§cLobby§7>");
+                if(args.length == 2) {
+                    String locationName = args[1].toLowerCase();
+                    Arena name = ArenaList.get(args[0].toLowerCase());
+                    if (name != null) {
+                        if (locationName.equalsIgnoreCase("red") || locationName.equalsIgnoreCase("blue") || locationName.equalsIgnoreCase("spectator") || locationName.equalsIgnoreCase("lobby") || locationName.equalsIgnoreCase("red2") || locationName.equalsIgnoreCase("blue2")) {
+                            TeamFight.getInstance().getFilemanager().saveLocation(name, locationName, player.getLocation(), player);
+                            ;
+                        } else {
+                            player.sendMessage("§cИспользуй: §7/§csetlocation <arenaname> §7<§cRed§7/§cBlue§7/§cRed2§7/§cBlue2§7/§cSpectator§7/§cLobby§7>");
+                        }
                     }
                 }
                 else
                 {
-                    player.sendMessage("§cИспользуй: §7/§csetlocation §7<§cRed§7/§cBlue§7/§cRed2§7/§cBlue2§7/§cSpectator§7/§cLobby§7>");
+                    player.sendMessage("§cИспользуй: §7/§csetlocation <arenaname> §7<§cRed§7/§cBlue§7/§cRed2§7/§cBlue2§7/§cSpectator§7/§cLobby§7>");
                 }
             }
         }

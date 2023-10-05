@@ -3,14 +3,17 @@ package ua.limefu.teamfight;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import ua.limefu.teamfight.arena.Arena;
 
 public class Countdown {
 
     public boolean lobbystarted = false;
     public boolean restartstarted = false;
 
-    String prefix = TeamFight.main.prefix;
-    int minimumPlayers = TeamFight.main.minimumPlayers;
+
+    private final TeamFight plugin = TeamFight.getInstance();
+
+    String prefix = plugin.prefix;
 
     public static int lobbycd;
     public int informcd;
@@ -19,145 +22,151 @@ public class Countdown {
     int restartcd;
 
     @SuppressWarnings("deprecation")
-    public void startPlayerLeftBroadcast(){
-        informcd = Bukkit.getScheduler().scheduleAsyncRepeatingTask(TeamFight.main, new Runnable() {
-
-            @Override
-            public void run() {
-                if(Bukkit.getOnlinePlayers().size() < minimumPlayers && Bukkit.getOnlinePlayers().size() > 0){
-                    int playerNeeded = minimumPlayers-Bukkit.getOnlinePlayers().size();
-                    if(playerNeeded == 1){
-                        Bukkit.broadcastMessage(prefix + "§7Для того чтобы раунд начался, нужен еще 1 игрок в игре.");
-                    }else{
-                        Bukkit.broadcastMessage(prefix + "§7Для того чтобы раунд начался нужно еще §f" + playerNeeded + " §7игроков.");
-                    }
-                }
-            }
-        }, 0, 20*60);
-    }
-
-    public void startLobbyCD()
-    {
-        if(!lobbystarted)
-        {
-            lobbystarted = true;
-            lobbycd = Bukkit.getScheduler().scheduleSyncRepeatingTask((Plugin) TeamFight.main, new Runnable()
-            {
+    public void startPlayerLeftBroadcast(Arena arena) {
+        if (arena != null) {
+            informcd = Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
 
                 @Override
-                public void run()
-                {
-                    Bukkit.getScheduler().cancelTask(informcd);
-
-                    if(TeamFight.main.lobbyTime == 60){
-                        broadcastLobbyTime();
-                        setPlayerLevel();
-                    }else if(TeamFight.main.lobbyTime <= 59 && TeamFight.main.lobbyTime >= 31){
-                        setPlayerLevel();
-                    }else if(TeamFight.main.lobbyTime == 30){
-                        broadcastLobbyTime();
-                        setPlayerLevel();
-                    }else if(TeamFight.main.lobbyTime <= 29 && TeamFight.main.lobbyTime >= 6){
-                        setPlayerLevel();
-                    }else if(TeamFight.main.lobbyTime <= 5 && TeamFight.main.lobbyTime > 1){
-                        broadcastLobbyTime();
-                        setPlayerLevel();
-                    }else if(TeamFight.main.lobbyTime == 1){
-                        Bukkit.broadcastMessage(prefix + "§7Игра начинается через секунду");
-                        setPlayerLevel();
-                    }else if(TeamFight.main.lobbyTime == 0){
-                        Bukkit.broadcastMessage(prefix + "§7Игра начинается.");
-                        setPlayerLevel();
-
-                        for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                            TeamFight.playerUtil.pushPlayersInTeam(currentPlayer);
+                public void run() {
+                    if (arena.getPlayers().size() < arena.getMinimumPlayers() && arena.getPlayers().size() > 0) {
+                        int playerNeeded = arena.getMinimumPlayers() - arena.getPlayers().size();
+                        if (playerNeeded == 1) {
+                            Bukkit.broadcastMessage(prefix + "§7Для того чтобы раунд начался, нужен еще 1 игрок в игре.");
+                        } else {
+                            Bukkit.broadcastMessage(prefix + "§7Для того чтобы раунд начался нужно еще §f" + playerNeeded + " §7игроков.");
                         }
-                        TeamFight.playerUtil.teleportPlayersInBase();
-
-                        TeamFight.main.state = GameState.GRACE;
-                        startGraceCD();
-                        Bukkit.getScheduler().cancelTask(lobbycd);
                     }
-                    TeamFight.main.lobbyTime--;
                 }
-            }, 0, 20L);
+            }, 0, 20 * 60);
+        }
+    }
 
+    public void startLobbyCD(Arena arena) {
+        if (arena != null) {
+            if (!lobbystarted) {
+                lobbystarted = true;
+                lobbycd = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+
+                    @Override
+                    public void run() {
+                        Bukkit.getScheduler().cancelTask(informcd);
+
+                        if (arena.getLobbyTime() == 60) {
+                            broadcastLobbyTime(arena);
+                            setPlayerLevel(arena);
+                        } else if (arena.getLobbyTime() <= 59 && arena.getLobbyTime() >= 31) {
+                            setPlayerLevel(arena);
+                        } else if (arena.getLobbyTime() == 30) {
+                            broadcastLobbyTime(arena);
+                            setPlayerLevel(arena);
+                        } else if (arena.getLobbyTime() <= 29 && arena.getLobbyTime() >= 6) {
+                            setPlayerLevel(arena);
+                        } else if (arena.getLobbyTime() <= 5 && arena.getLobbyTime() > 1) {
+                            broadcastLobbyTime(arena);
+                            setPlayerLevel(arena);
+                        } else if (arena.getLobbyTime() == 1) {
+                            Bukkit.broadcastMessage(prefix + "§7Игра начинается через секунду");
+                            setPlayerLevel(arena);
+                        } else if (arena.getLobbyTime() == 0) {
+                            Bukkit.broadcastMessage(prefix + "§7Игра начинается.");
+                            setPlayerLevel(arena);
+
+                            for (Player currentPlayer : Bukkit.getOnlinePlayers()) {
+                                plugin.getPlayerUtil().pushPlayersInTeam(currentPlayer);
+                            }
+                            plugin.getPlayerUtil().teleportPlayersInBase(arena);
+
+                            plugin.setState(GameState.GRACE);
+                            startGraceCD(arena);
+                            Bukkit.getScheduler().cancelTask(lobbycd);
+                        }
+                        arena.setLobbyTime(arena.getLobbyTime() - 1);
+                    }
+                }, 0, 20L);
+
+            }
         }
     }
 
 
-    public void startGraceCD(){
+    public void startGraceCD(Arena arena) {
 
-        gracecd = Bukkit.getScheduler().scheduleSyncRepeatingTask((Plugin) TeamFight.main, new Runnable() {
+        if (arena != null) {
+            gracecd = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 
-            @Override
-            public void run() {
-                if(TeamFight.main.graceTime == 30){
-                    if(!TeamFight.main.gameInProgress){
-                        Bukkit.broadcastMessage("");
-                        Bukkit.broadcastMessage("");
-                        Bukkit.broadcastMessage(prefix + "§7Поменяйте цвет шерсти в центре карты чтобы победить.");
-                        Bukkit.broadcastMessage(prefix + "§7Для победы нужно 3 очка!");
-                        Bukkit.broadcastMessage("");
-                        Bukkit.broadcastMessage("");
-                        TeamFight.main.gameInProgress = true;
-                    }
-                    for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                        if(TeamFight.main.TeamBlue.contains(currentPlayer) || TeamFight.main.TeamRed.contains(currentPlayer)){
-                            TeamFight.itemUtil.giveIngameItems(currentPlayer);
+                @Override
+                public void run() {
+                    if (arena.getGraceTime() == 30) {
+                        if (!arena.isGameInProgress()) {
+                            Bukkit.broadcastMessage("");
+                            Bukkit.broadcastMessage("");
+                            Bukkit.broadcastMessage(prefix + "§7Поменяйте цвет шерсти в центре карты чтобы победить.");
+                            Bukkit.broadcastMessage(prefix + "§7Для победы нужно 3 очка!");
+                            Bukkit.broadcastMessage("");
+                            Bukkit.broadcastMessage("");
+                            arena.setGameInProgress(true);
                         }
-                    }
-                    setPlayerLevel();
-                }else if(TeamFight.main.graceTime <= 30 && TeamFight.main.graceTime >= 16){
-                    setPlayerLevel();
-                }else if(TeamFight.main.graceTime == 15){
+                        for (Player currentPlayer : arena.getPlayers()) {
+                            if (arena.getTeamBlue().contains(currentPlayer) || arena.getTeamRed().contains(currentPlayer)) {
+                                plugin.getItemUtil().giveIngameItems(currentPlayer);
+                            }
+                        }
+                        setPlayerLevel(arena);
+                    } else if (arena.getGraceTime() <= 30 && arena.getGraceTime() >= 16) {
+                        setPlayerLevel(arena);
+                    } else if (arena.getGraceTime() == 15) {
 
-                    TeamFight.playerUtil.teleportPlayersInStartPosition();
-                    setPlayerLevel();
+                        plugin.getPlayerUtil().teleportPlayersInStartPosition(arena);
+                        setPlayerLevel(arena);
 
-                }else if(TeamFight.main.graceTime <= 14 && TeamFight.main.graceTime >= 4){
-                    setPlayerLevel();
-                }else if(TeamFight.main.graceTime == 3){
-                    setPlayerLevel();
-                    for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                        currentPlayer.sendTitle("§c§l»3«", null);
+                    } else if (arena.getGraceTime()<= 14 && arena.getGraceTime() >= 4) {
+                        setPlayerLevel(arena);
+                    } else if (arena.getGraceTime() == 3) {
+                        setPlayerLevel(arena);
+                        for (Player currentPlayer : Bukkit.getOnlinePlayers()) {
+                            currentPlayer.sendTitle("§c§l»3«", null);
+                        }
+                    } else if (arena.getGraceTime() == 2) {
+                        setPlayerLevel(arena);
+                        for (Player currentPlayer : Bukkit.getOnlinePlayers()) {
+                            currentPlayer.sendTitle("§e§l»2«", null);
+                        }
+                    } else if (arena.getGraceTime() == 1) {
+                        setPlayerLevel(arena);
+                        for (Player currentPlayer : Bukkit.getOnlinePlayers()) {
+                            currentPlayer.sendTitle("§a§l»1«", null);
+                        }
+                    } else if (arena.getGraceTime() == 0) {
+                        setPlayerLevel(arena);
+                        for (Player currentPlayer : Bukkit.getOnlinePlayers()) {
+                            currentPlayer.sendTitle("§b§lВперед!", null);
+                        }
+                        plugin.setState(GameState.INGAME);
+                        Bukkit.getScheduler().cancelTask(gracecd);
                     }
-                }else if(TeamFight.main.graceTime == 2){
-                    setPlayerLevel();
-                    for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                        currentPlayer.sendTitle("§e§l»2«", null);
-                    }
-                }else if(TeamFight.main.graceTime == 1){
-                    setPlayerLevel();
-                    for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                        currentPlayer.sendTitle("§a§l»1«", null);
-                    }
-                }else if(TeamFight.main.graceTime == 0){
-                    setPlayerLevel();
-                    for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                        currentPlayer.sendTitle("§b§lВперед!", null);
-                    }
-                    TeamFight.main.state = GameState.INGAME;
-                    Bukkit.getScheduler().cancelTask(gracecd);
+                    arena.setGraceTime(arena.getGraceTime() - 1 );
                 }
-                TeamFight.main.graceTime--;
-            }
-        }, 0, 20L);
+            }, 0, 20L);
+        }
     }
 
 
-    public void setPlayerLevel(){
-        if(TeamFight.main.state == GameState.LOBBY){
-            for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                currentPlayer.setLevel(TeamFight.main.lobbyTime);
-            }
-        }else if(TeamFight.main.state == GameState.GRACE)
-            for(Player currentPlayer:Bukkit.getOnlinePlayers()){
-                currentPlayer.setLevel(TeamFight.main.graceTime);
-            }
+    public void setPlayerLevel(Arena arena){
+        if (arena != null) {
+            if (plugin.getState() == GameState.LOBBY) {
+                for (Player currentPlayer : arena.getPlayers()) {
+                    currentPlayer.setLevel(arena.getLobbyTime());
+                }
+            } else if (plugin.getState() == GameState.GRACE)
+                for (Player currentPlayer : Bukkit.getOnlinePlayers()) {
+                    currentPlayer.setLevel(arena.getGraceTime());
+                }
+        }
     }
 
-    public void broadcastLobbyTime(){
-        Bukkit.broadcastMessage(prefix + "§7До начала игры осталось §f" + TeamFight.main.lobbyTime + " §7секунд.");
+    public void broadcastLobbyTime(Arena arena){
+         if (arena != null) {
+             Bukkit.broadcastMessage(prefix + "§7До начала игры осталось §f" + arena.getLobbyTime() + " §7секунд.");
+         }
     }
 }

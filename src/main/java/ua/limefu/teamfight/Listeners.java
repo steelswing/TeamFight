@@ -13,66 +13,37 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import ua.limefu.teamfight.arena.Arena;
+import ua.limefu.teamfight.arena.ArenaList;
 
 
 public class Listeners implements Listener {
-    @EventHandler
-    public void playerJoin(PlayerJoinEvent event)
-    {
-
-        Player player = event.getPlayer();
-        int onlinePlayers = Bukkit.getOnlinePlayers().size();
-
-        event.setJoinMessage(null);
-
-        if(TeamFight.main.state == GameState.LOBBY){
-            Bukkit.broadcastMessage("§7" + player.getName() + " зашел на сервер (§f" + onlinePlayers + "§7/§f" + TeamFight.main.maximumPlayers + "§7)");
-
-            if(onlinePlayers == TeamFight.main.minimumPlayers){
-                TeamFight.countdown.startLobbyCD();
-            }
-            Bukkit.getScheduler().runTaskLater(TeamFight.main, new Runnable() {
-                @Override
-                public void run() {
-                    TeamFight.itemUtil.giveLobbyItems(player);
-                    player.teleport(TeamFight.filemanager.getLocation("lobby"));
-                    player.setHealth(20);
-                    player.setFoodLevel(20);
-                }
-            }, 5);
-        }
-        else
-        {
-            Bukkit.getScheduler().runTaskLater(TeamFight.main, new Runnable() {
-                @Override
-                public void run() {
-                    player.getInventory().clear();
-                    player.teleport(TeamFight.filemanager.getLocation("spectator"));
-                }
-            }, 5);
-        }
-    }
+    private final TeamFight plugin = TeamFight.getInstance();
+    private Arena arena;
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event){
-        if(TeamFight.main.state != GameState.INGAME){
+        if(plugin.getState() != GameState.INGAME){
             event.setCancelled(true);
-        }else if(TeamFight.main.state == GameState.INGAME){
+        }else if(plugin.getState() == GameState.INGAME){
             Player damager;
             Player damaged = (Player)event.getEntity();
+            arena = ArenaList.getArenaForPlayer(damaged);
+            if (arena!= null) {
 
-            if(event.getDamager() instanceof Arrow){
-                Arrow arrow = (Arrow) event.getDamager();
-                damager = (Player) arrow.getShooter();
-            }else{
-                damager = (Player) event.getDamager();
-            }
+                if (event.getDamager() instanceof Arrow) {
+                    Arrow arrow = (Arrow) event.getDamager();
+                    damager = (Player) arrow.getShooter();
+                } else {
+                    damager = (Player) event.getDamager();
+                }
 
-            if(TeamFight.main.TeamBlue.contains(damager) & TeamFight.main.TeamBlue.contains(damaged)){
-                event.setDamage(0.0);
-            }else if(TeamFight.main.TeamRed.contains(damager) & TeamFight.main.TeamRed.contains(damaged)){
-                event.setDamage(0.0);
-            }else{
-                event.setCancelled(false);
+                if (arena.getTeamBlue().contains(damager) & arena.getTeamBlue().contains(damaged)) {
+                    event.setDamage(0.0);
+                } else if (arena.getTeamRed().contains(damager) & arena.getTeamRed().contains(damaged)) {
+                    event.setDamage(0.0);
+                } else {
+                    event.setCancelled(false);
+                }
             }
         }
     }
@@ -81,45 +52,53 @@ public class Listeners implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent event){
 
-        if(event.getEntity() instanceof Player){
+        if(event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
             Player killer = player.getKiller();
+            arena = ArenaList.getArenaForPlayer(player);
+            if (arena != null) {
 
-            event.getDrops().clear();
+                event.getDrops().clear();
 
-            killer.sendTitle("§f[§a⚔§f] " + player.getDisplayName(), "");
-            killer.playSound(killer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+                killer.sendTitle("§f[§a⚔§f] " + player.getDisplayName(), "");
+                killer.playSound(killer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
-            Bukkit.getScheduler().runTaskLater(TeamFight.main, new Runnable() {
-                @Override
-                public void run() {
-                    player.spigot().respawn();
-                    player.teleport(TeamFight.filemanager.getLocation("spectator"));
-                    player.getInventory().clear();
-                }
-            }, 5);
+                Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        player.spigot().respawn();
+                        player.teleport(plugin.getFilemanager().getLocation(arena, "spectator"));
+                        player.getInventory().clear();
+                    }
+                }, 5);
+            }
         }
     }
 
     @EventHandler
-    public void onRegen(EntityRegainHealthEvent event){
-        if(TeamFight.main.state == GameState.INGAME){
-            event.setCancelled(true);
+    public void onRegen(EntityRegainHealthEvent event) {
+        Player player = (Player) event.getEntity();
+        arena = ArenaList.getArenaForPlayer(player);
+        if (arena != null) {
+            if (plugin.getState() == GameState.INGAME) {
+                event.setCancelled(true);
+            }
         }
     }
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event){
 
         Location targetBlockLocation = event.getBlock().getLocation();
-        if(TeamFight.maputil.isInside(targetBlockLocation) && TeamFight.main.state == GameState.INGAME)
-        {
-            event.setCancelled(false);
-            TeamFight.maputil.checkTargetForWinner();
-            TeamFight.itemUtil.refillWool(event.getPlayer());
-        }
-        else
-        {
-            event.setCancelled(true);
+        Player player = event.getPlayer();
+        Arena arena = ArenaList.getArenaForPlayer(player);
+        if (arena != null) {
+            if (plugin.getMaputil().isInside(arena, targetBlockLocation) && plugin.getState() == GameState.INGAME) {
+                event.setCancelled(false);
+                plugin.getMaputil().checkTargetForWinner(arena);
+                plugin.getItemUtil().refillWool(event.getPlayer());
+            } else {
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -127,25 +106,28 @@ public class Listeners implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event){
         Location targetBlockLocation = event.getBlock().getLocation();
+        arena = ArenaList.getArenaForPlayer(event.getPlayer());
+        if (arena != null) {
 
-        if(TeamFight.maputil.isInside(targetBlockLocation) && TeamFight.main.state == GameState.INGAME)
-        {
-            event.setCancelled(false);
-            event.setDropItems(false);
-        }
-        else
-        {
-            event.setCancelled(true);
+            if (plugin.getMaputil().isInside(arena, targetBlockLocation) && plugin.getState() == GameState.INGAME) {
+                event.setCancelled(false);
+                event.setDropItems(false);
+            } else {
+                event.setCancelled(true);
+            }
         }
     }
 
     @EventHandler
     public void onMove(PlayerMoveEvent event){
+        Player player = event.getPlayer();
+        arena = ArenaList.getArenaForPlayer(player);
+        if (arena != null) {
 
-        if(TeamFight.main.state == GameState.GRACE && TeamFight.main.graceTime <= 14 && TeamFight.main.graceTime >= 0)
-        {
-            event.setTo(event.getFrom());
-        }
+            if (plugin.getState() == GameState.GRACE && arena.getGraceTime() <= 14 && arena.getGraceTime() >= 0) {
+                event.setTo(event.getFrom());
+            }
+        } else event.setCancelled(true);
     }
 
 
@@ -158,8 +140,12 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent event){
-        if(TeamFight.main.state != GameState.INGAME){
-            event.setCancelled(true);
+        Player player = (Player) event.getEntity();
+        arena = ArenaList.getArenaForPlayer(player);
+        if (arena != null) {
+            if (plugin.getState() != GameState.INGAME) {
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -167,20 +153,23 @@ public class Listeners implements Listener {
     public void onDamageByEntity(EntityDamageByEntityEvent event){
         if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
             Player damaged = (Player)event.getEntity();
-            Player damager = (Player)event.getDamager();
-            if(TeamFight.main.state != GameState.INGAME){
-                event.setCancelled(true);
-                return;
-            }else{
-                if(TeamFight.main.TeamRed.contains(damaged) && TeamFight.main.TeamRed.contains(damager)){
+            Player damager = (Player) event.getDamager();
+            arena = ArenaList.getArenaForPlayer(damaged);
+            if (arena != null) {
+                if (plugin.getState() != GameState.INGAME) {
                     event.setCancelled(true);
                     return;
-                }else if(TeamFight.main.TeamBlue.contains(damaged) && TeamFight.main.TeamBlue.contains(damager)){
-                    event.setCancelled(true);
-                    return;
-                }else{
-                    event.setCancelled(false);
-                    return;
+                } else {
+                    if (arena.getTeamRed().contains(damaged) && arena.getTeamRed().contains(damager)) {
+                        event.setCancelled(true);
+                        return;
+                    } else if (arena.getTeamBlue().contains(damaged) && arena.getTeamBlue().contains(damager)) {
+                        event.setCancelled(true);
+                        return;
+                    } else {
+                        event.setCancelled(false);
+                        return;
+                    }
                 }
             }
         }
@@ -188,9 +177,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onItemDrop(PlayerDropItemEvent event)
     {
-        if(TeamFight.main.state != GameState.INGAME)
-        {
             event.setCancelled(true);
-        }
+
     }
 }

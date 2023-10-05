@@ -7,9 +7,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import ua.limefu.teamfight.TeamFight;
+import ua.limefu.teamfight.arena.Arena;
+import ua.limefu.teamfight.arena.ArenaList;
 
 public class ItemManager {
+    private Arena arena;
     public void giveLobbyItems(Player player)
     {
 
@@ -26,76 +28,75 @@ public class ItemManager {
 
     }
 
-    public void giveIngameItems(Player player)
-    {
+    public void giveIngameItems(Player player) {
+        arena = ArenaList.getArenaForPlayer(player);
+        if (arena != null) {
 
-        ItemStack stoneSword = new ItemStack(Material.STONE_SWORD);
-        ItemMeta stoneSwordMeta = stoneSword.getItemMeta();
-        stoneSwordMeta.setUnbreakable(true);
-        stoneSword.setItemMeta(stoneSwordMeta);
-
-
-        ItemStack bow = new ItemStack(Material.BOW);
-        ItemMeta bowMeta = bow.getItemMeta();
-        bowMeta.setUnbreakable(true);
-        bow.setItemMeta(bowMeta);
+            ItemStack stoneSword = new ItemStack(Material.STONE_SWORD);
+            ItemMeta stoneSwordMeta = stoneSword.getItemMeta();
+            stoneSwordMeta.setUnbreakable(true);
+            stoneSword.setItemMeta(stoneSwordMeta);
 
 
-        ItemStack shear = new ItemStack(Material.SHEARS);
-        ItemMeta shearMeta = shear.getItemMeta();
-        shearMeta.setUnbreakable(true);
-        shear.setItemMeta(shearMeta);
+            ItemStack bow = new ItemStack(Material.BOW);
+            ItemMeta bowMeta = bow.getItemMeta();
+            bowMeta.setUnbreakable(true);
+            bow.setItemMeta(bowMeta);
 
 
-        ItemStack shield = new ItemStack(Material.SHIELD);
-        ItemMeta shieldMeta = shield.getItemMeta();
-        shieldMeta.setUnbreakable(true);
-        shield.setItemMeta(shieldMeta);
+            ItemStack shear = new ItemStack(Material.SHEARS);
+            ItemMeta shearMeta = shear.getItemMeta();
+            shearMeta.setUnbreakable(true);
+            shear.setItemMeta(shearMeta);
 
 
-        ItemStack redLeatherBoots = new ItemStack(Material.LEATHER_BOOTS);
-        LeatherArmorMeta redLeatherBootsMeta = (LeatherArmorMeta) redLeatherBoots.getItemMeta();
-        redLeatherBootsMeta.setColor(Color.RED);
-        redLeatherBootsMeta.setUnbreakable(true);
-        redLeatherBoots.setItemMeta(redLeatherBootsMeta);
+            ItemStack shield = new ItemStack(Material.SHIELD);
+            ItemMeta shieldMeta = shield.getItemMeta();
+            shieldMeta.setUnbreakable(true);
+            shield.setItemMeta(shieldMeta);
 
 
-        ItemStack aquaLeatherBoots = new ItemStack(Material.LEATHER_BOOTS);
-        LeatherArmorMeta aquaLeatherBootsMeta = (LeatherArmorMeta) aquaLeatherBoots.getItemMeta();
-        aquaLeatherBootsMeta.setColor(Color.AQUA);
-        aquaLeatherBootsMeta.setUnbreakable(true);
-        aquaLeatherBoots.setItemMeta(aquaLeatherBootsMeta);
+            ItemStack redLeatherBoots = new ItemStack(Material.LEATHER_BOOTS);
+            LeatherArmorMeta redLeatherBootsMeta = (LeatherArmorMeta) redLeatherBoots.getItemMeta();
+            redLeatherBootsMeta.setColor(Color.RED);
+            redLeatherBootsMeta.setUnbreakable(true);
+            redLeatherBoots.setItemMeta(redLeatherBootsMeta);
 
-        player.getInventory().clear();
 
-        player.getInventory().setItem(0, stoneSword);
-        player.getInventory().setItem(1, bow);
-        player.getInventory().setItem(2, shear);
-        player.getInventory().setItem(4, new ItemStack(Material.ARROW, 8));
+            ItemStack aquaLeatherBoots = new ItemStack(Material.LEATHER_BOOTS);
+            LeatherArmorMeta aquaLeatherBootsMeta = (LeatherArmorMeta) aquaLeatherBoots.getItemMeta();
+            aquaLeatherBootsMeta.setColor(Color.AQUA);
+            aquaLeatherBootsMeta.setUnbreakable(true);
+            aquaLeatherBoots.setItemMeta(aquaLeatherBootsMeta);
 
-        if(TeamFight.main.TeamRed.contains(player))
-        {
-            player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 14));
-            player.getInventory().setBoots(redLeatherBoots);
+            player.getInventory().clear();
+
+            player.getInventory().setItem(0, stoneSword);
+            player.getInventory().setItem(1, bow);
+            player.getInventory().setItem(2, shear);
+            player.getInventory().setItem(4, new ItemStack(Material.ARROW, 8));
+
+            if (arena.getTeamRed().contains(player)) {
+                player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 14));
+                player.getInventory().setBoots(redLeatherBoots);
+            } else {
+                player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 11));
+                player.getInventory().setBoots(aquaLeatherBoots);
+            }
+
         }
-        else
-        {
-            player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 11));
-            player.getInventory().setBoots(aquaLeatherBoots);
-        }
-
     }
 
-    public void refillWool(Player player){
+    public void refillWool(Player player) {
+        arena = ArenaList.getArenaForPlayer(player);
+        if (arena != null) {
+            if (arena.getTeamRed().contains(player)) {
+                player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 14));
+            } else {
+                player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 11));
+                ;
+            }
 
-        if(TeamFight.main.TeamRed.contains(player))
-        {
-            player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 14));
         }
-        else
-        {
-            player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 11));;
-        }
-
     }
 }

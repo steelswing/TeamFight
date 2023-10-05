@@ -9,98 +9,104 @@ import org.bukkit.entity.Player;
 import org.bukkit.material.Wool;
 import ua.limefu.teamfight.GameState;
 import ua.limefu.teamfight.TeamFight;
+import ua.limefu.teamfight.arena.Arena;
 
 public class MapManager {
-    public void resetTarget(){
-        Bukkit.getScheduler().runTaskLater(TeamFight.main, new Runnable() {
-            @Override
-            public void run() {
-                for(int i = 1; i<=9; i++){
-                    TeamFight.filemanager.getBlockLocation(i).getBlock().setType(Material.WOOL);
+    private boolean allBlocksMatch = true;
+    private final TeamFight plugin = TeamFight.getInstance();
+    public void resetTarget(Arena name) {
+        if (name != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 1; i <= 9; i++) {
+                        plugin.getFilemanager().getBlockLocation(name, i).getBlock().setType(Material.WOOL);
+                    }
+                }
+            }, 20);
+        }
+    }
+
+    public void resetTeams(Arena arena){
+        if (arena != null) {
+
+            for (Player currentPlayer : arena.getPlayers()) {
+                if (arena.getTeamBlue().contains(currentPlayer) || arena.getTeamRed().contains(currentPlayer)) {
+                    currentPlayer.setHealth(20);
+                    currentPlayer.setFoodLevel(20);
                 }
             }
-        }, 20);
-    }
-
-    public void resetTeams(){
-
-        for(Player currentPlayer: Bukkit.getOnlinePlayers()){
-            if(TeamFight.main.TeamBlue.contains(currentPlayer) || TeamFight.main.TeamRed.contains(currentPlayer)){
-                currentPlayer.setHealth(20);
-                currentPlayer.setFoodLevel(20);
-            }
+            plugin.getPlayerUtil().teleportPlayersInBase(arena);
+            arena.setGraceTime(30);
+            plugin.setState(GameState.GRACE);
+            Bukkit.getScheduler().cancelTask(plugin.getCountdown().ingamecd);
+            plugin.getCountdown().startGraceCD(arena);
         }
-        TeamFight.playerUtil.teleportPlayersInBase();
-        TeamFight.main.graceTime = 30;
-        TeamFight.main.state = GameState.GRACE;
-        Bukkit.getScheduler().cancelTask(TeamFight.countdown.ingamecd);
-        TeamFight.countdown.startGraceCD();
 
     }
 
-    public void checkTargetForWinner(){
-        if(TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(2).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(3).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(4).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(5).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(6).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(7).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(8).getBlock().getType()
-                && TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == TeamFight.filemanager.getBlockLocation(9).getBlock().getType()){
-            if(TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == Material.WOOL){
-                BlockState state = TeamFight.filemanager.getBlockLocation(1).getBlock().getState();
-                Wool wool = (Wool) state.getData();
-                if (wool.getColor() == DyeColor.RED) {
+    public void checkTargetForWinner(Arena name) {
+        if (name != null) {
+            Material referencedBlockMaterial = plugin.getFilemanager().getBlockLocation(name, 1).getBlock().getType();
 
-                    TeamFight.main.scoreTeamRed++;
-                    if (TeamFight.main.scoreTeamRed == 3) {
-                        Bukkit.broadcastMessage(TeamFight.main.prefix + "§4Красные §7победили.");
-                        TeamFight.playerUtil.endGame();
-                        TeamFight.main.state = GameState.LOBBY;
-                        resetTarget();
-                    } else {
-                        Bukkit.broadcastMessage(TeamFight.main.prefix + "§4Красные §7выиграли раунд и теперь имеют §e" + TeamFight.main.scoreTeamRed + " §7Очков§7.");
-                        resetTeams();
-                    }
-
-                    resetTarget();
-                } else if(wool.getColor() == DyeColor.BLUE) {
-                    TeamFight.main.scoreTeamBlue++;
-                    if (TeamFight.main.scoreTeamBlue == 3) {
-                        Bukkit.broadcastMessage(TeamFight.main.prefix + "§bСиние §7победили!");
-                        TeamFight.playerUtil.endGame();
-                        TeamFight.main.state = GameState.LOBBY;
-                        resetTarget();
-
-                    } else {
-                        Bukkit.broadcastMessage(TeamFight.main.prefix + "§bСиние §7выиграли раунд и теперь имеют §e" + TeamFight.main.scoreTeamBlue + " §7Очков§7.");
-                        resetTeams();
-                    }
-                    resetTarget();
+            for (int i = 2; i <= 9; i++) {
+                if (plugin.getFilemanager().getBlockLocation(name, i).getBlock().getType() != referencedBlockMaterial) {
+                    allBlocksMatch = false;
+                    break;
                 }
-            }else {
-                return;
+            }
+
+            if (allBlocksMatch) {
+                if (plugin.getFilemanager().getBlockLocation(name, 1).getBlock().getType() == Material.WOOL) {
+                    BlockState state = plugin.getFilemanager().getBlockLocation(name, 1).getBlock().getState();
+                    Wool wool = (Wool) state.getData();
+                    if (wool.getColor() == DyeColor.RED) {
+
+                        name.setScoreTeamRed(name.getScoreTeamRed() + 1);
+                        if (name.getScoreTeamBlue() == 3) {
+                            Bukkit.broadcastMessage(plugin.prefix + "§4Красные §7победили.");
+                            plugin.getPlayerUtil().endGame(name);
+                            plugin.setState(GameState.LOBBY);
+                            resetTarget(name);
+                        } else {
+                            Bukkit.broadcastMessage(plugin.prefix + "§4Красные §7выиграли раунд и теперь имеют §e" + name.getScoreTeamRed() + " §7Очков§7.");
+                            resetTeams(name);
+                        }
+
+                        resetTarget(name);
+                    } else if (wool.getColor() == DyeColor.BLUE) {
+                        name.setScoreTeamBlue(name.getScoreTeamBlue() + 1);
+                        if (name.getScoreTeamBlue() == 3) {
+                            Bukkit.broadcastMessage(plugin.prefix + "§bСиние §7победили!");
+                            plugin.getPlayerUtil().endGame(name);
+                            plugin.setState(GameState.LOBBY);
+                            resetTarget(name);
+
+                        } else {
+                            Bukkit.broadcastMessage(plugin.prefix + "§bСиние §7выиграли раунд и теперь имеют §e" + name.getScoreTeamBlue() + " §7Очков§7.");
+                            resetTeams(name);
+                        }
+                        resetTarget(name);
+                    }
+
+                }
             }
         }
     }
 
-    public boolean isInside(Location location){
 
-        if(location.getBlockX() == TeamFight.filemanager.getBlockLocation(1).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(1).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(1).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(2).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(2).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(2).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(3).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(3).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(3).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(4).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(4).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(4).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(5).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(5).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(5).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(6).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(6).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(6).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(7).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(7).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(7).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(8).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(8).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(8).getBlockZ()
-                || location.getBlockX() == TeamFight.filemanager.getBlockLocation(9).getBlockX() & location.getBlockY() == TeamFight.filemanager.getBlockLocation(9).getBlockY() & location.getBlockZ() == TeamFight.filemanager.getBlockLocation(9).getBlockZ()){
-
-            return true;
+    public boolean isInside(Arena name, Location location) {
+        if (name != null) {
+            int[] blockLocations = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+            for (int blockNumber : blockLocations) {
+                Location blockLocation = plugin.getFilemanager().getBlockLocation(name, blockNumber);
+                if (location.getBlockX() == blockLocation.getBlockX()
+                        && location.getBlockY() == blockLocation.getBlockY() && location.getBlockZ() == blockLocation.getBlockZ()
+                ) {
+                    return true;
+                }
+            }
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 }
