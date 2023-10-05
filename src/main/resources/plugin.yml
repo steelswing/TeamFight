@@ -4,10 +4,11 @@ main: ua.limefu.teamfight.TeamFight
 authors: [ LimeFu ]
 
 commands:
-  setspawnteam:
-    permission: teamfight.setspawn
-    permission-message: "You not permission"
-    usage: /setspawnteam {team}
-  teamfight:
+  start:
+
+  setupblocklocation:
+
+  setlocation:
+
 
 
