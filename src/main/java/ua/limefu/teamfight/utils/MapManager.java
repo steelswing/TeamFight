@@ -55,28 +55,30 @@ public class MapManager {
                     TeamFight.main.scoreTeamRed++;
                     if (TeamFight.main.scoreTeamRed == 3) {
                         Bukkit.broadcastMessage(TeamFight.main.prefix + "§4Красные §7победили.");
+                        TeamFight.playerUtil.endGame();
+                        TeamFight.main.state = GameState.LOBBY;
+                        resetTarget();
                     } else {
                         Bukkit.broadcastMessage(TeamFight.main.prefix + "§4Красные §7выиграли раунд и теперь имеют §e" + TeamFight.main.scoreTeamRed + " §7Очков§7.");
                         resetTeams();
                     }
 
                     resetTarget();
-                }
-            }else if(TeamFight.filemanager.getBlockLocation(1).getBlock().getType() == Material.WOOL){
-                BlockState state = TeamFight.filemanager.getBlockLocation(1).getBlock().getState();
-                Wool wool = (Wool) state.getData();
-                if (wool.getColor() == DyeColor.BLUE) {
+                } else if(wool.getColor() == DyeColor.BLUE) {
                     TeamFight.main.scoreTeamBlue++;
                     if (TeamFight.main.scoreTeamBlue == 3) {
                         Bukkit.broadcastMessage(TeamFight.main.prefix + "§bСиние §7победили!");
+                        TeamFight.playerUtil.endGame();
+                        TeamFight.main.state = GameState.LOBBY;
+                        resetTarget();
+
                     } else {
                         Bukkit.broadcastMessage(TeamFight.main.prefix + "§bСиние §7выиграли раунд и теперь имеют §e" + TeamFight.main.scoreTeamBlue + " §7Очков§7.");
                         resetTeams();
                     }
-
                     resetTarget();
                 }
-            }else{
+            }else {
                 return;
             }
         }

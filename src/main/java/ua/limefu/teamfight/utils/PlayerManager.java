@@ -59,4 +59,17 @@ public class PlayerManager {
             targetPlayer.teleport(TeamFight.filemanager.getLocation("red2"));
         }
     }
+
+    public void endGame() {
+        TeamFight.main.scoreTeamBlue = 0;
+        TeamFight.main.scoreTeamRed = 0;
+        for(int i = 0; i < Bukkit.getOnlinePlayers().size(); i++){
+            Player targetPlayer = TeamFight.main.TeamBlue.get(i);
+            targetPlayer.teleport(TeamFight.filemanager.getLocation("lobby"));
+        }
+
+        TeamFight.main.TeamRed.clear();;
+        TeamFight.main.TeamBlue.clear();
+
+    }
 }

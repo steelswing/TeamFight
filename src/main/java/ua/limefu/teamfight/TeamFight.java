@@ -18,9 +18,9 @@ public final class TeamFight extends JavaPlugin {
 
     public static Countdown countdown;
 
-    public String prefix = "§6TeamFight §8┃ ";
-    public String NoPermissions = "§cУ вас нету прав!";
-    public String NoConsoleAllowed = "§cТолько игрок может использовать команду!";
+    public final String prefix = "§6TeamFight §8┃ ";
+    public final String NoPermissions = "§cУ вас нету прав!";
+    public final String NoConsoleAllowed = "§cТолько игрок может использовать команду!";
 
     public int minimumPlayers = 2;
     public int maximumPlayers = 8;
