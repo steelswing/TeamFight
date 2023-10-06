@@ -1,4 +1,4 @@
-package ua.limefu.teamfight.commands;
+package ua.limefu.teamfight.game.command;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
@@ -7,25 +7,22 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import ua.limefu.teamfight.TeamFight;
-import ua.limefu.teamfight.arena.Arena;
-import ua.limefu.teamfight.arena.ArenaList;
+import ua.limefu.teamfight.game.arena.Arena;
+import ua.limefu.teamfight.utils.ArenaUtil;
 
 public class StartCMD implements CommandExecutor {
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String arg, String[] args)
-    {
-        if(!(sender instanceof Player))
-        {
+    public boolean onCommand(CommandSender sender, Command cmd, String arg, String[] args) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage(TeamFight.getInstance().NoConsoleAllowed);
             return false;
         } else {
-            Player player = (Player)sender;
-            Arena arena = ArenaList.getArenaForPlayer(player);
-            if(!player.hasPermission("teamfight.command.start"))
-            {
+            Player player = (Player) sender;
+            Arena arena = ArenaUtil.getArenaForPlayer(player);
+            if (!player.hasPermission("teamfight.command.start")) {
                 player.sendMessage(TeamFight.getInstance().NoPermissions);
             } else {
-                if (arena!=null) {
+                if (arena != null) {
                     int onlinePlayers = arena.getPlayers().size();
                     if (onlinePlayers < arena.getMinimumPlayers()) {
                         player.sendMessage("§cНедостаточно игроков для старта игры!");

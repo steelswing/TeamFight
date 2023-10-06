@@ -1,4 +1,4 @@
-package ua.limefu.teamfight;
+package ua.limefu.teamfight.game;
 
 public enum GameState {
     LOBBY,

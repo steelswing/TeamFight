@@ -1,10 +1,10 @@
-package ua.limefu.teamfight.utils;
+package ua.limefu.teamfight.game.manager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import ua.limefu.teamfight.TeamFight;
-import ua.limefu.teamfight.arena.Arena;
-import ua.limefu.teamfight.arena.ArenaList;
+import ua.limefu.teamfight.game.arena.Arena;
+import ua.limefu.teamfight.utils.ArenaUtil;
 
 
 import java.util.Random;
@@ -12,8 +12,9 @@ import java.util.Random;
 public class PlayerManager {
 
     private final TeamFight plugin = TeamFight.getInstance();
+
     public void pushPlayersInTeam(Player player) {
-        Arena arena = ArenaList.getArenaForPlayer(player);
+        Arena arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
             if (arena.getTeamBlue().size() == 0 || arena.getTeamRed().size() == 0) {
                 arena.getTeamBlue().clear();
@@ -60,7 +61,7 @@ public class PlayerManager {
     }
 
 
-    public void teleportPlayersInStartPosition(Arena arena){
+    public void teleportPlayersInStartPosition(Arena arena) {
         if (arena != null) {
             for (int i = 0; i < arena.getTeamBlue().size(); i++) {
                 Player targetPlayer = arena.getTeamBlue().get(i);

@@ -1,4 +1,4 @@
-package ua.limefu.teamfight.utils;
+package ua.limefu.teamfight.game.manager;
 
 import org.bukkit.Color;
 import org.bukkit.GameMode;
@@ -7,13 +7,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import ua.limefu.teamfight.arena.Arena;
-import ua.limefu.teamfight.arena.ArenaList;
+import ua.limefu.teamfight.game.arena.Arena;
+import ua.limefu.teamfight.utils.ArenaUtil;
 
 public class ItemManager {
     private Arena arena;
-    public void giveLobbyItems(Player player)
-    {
+
+    public void giveLobbyItems(Player player) {
 
         ItemStack teamChooser = new ItemStack(Material.NETHER_STAR);
         ItemMeta teamChooserMeta = teamChooser.getItemMeta();
@@ -29,7 +29,7 @@ public class ItemManager {
     }
 
     public void giveIngameItems(Player player) {
-        arena = ArenaList.getArenaForPlayer(player);
+        arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
 
             ItemStack stoneSword = new ItemStack(Material.STONE_SWORD);
@@ -88,7 +88,7 @@ public class ItemManager {
     }
 
     public void refillWool(Player player) {
-        arena = ArenaList.getArenaForPlayer(player);
+        arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
             if (arena.getTeamRed().contains(player)) {
                 player.getInventory().setItem(3, new ItemStack(Material.WOOL, 64, (short) 14));

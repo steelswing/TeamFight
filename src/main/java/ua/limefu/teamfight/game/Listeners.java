@@ -1,4 +1,4 @@
-package ua.limefu.teamfight;
+package ua.limefu.teamfight.game;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -11,24 +11,25 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import ua.limefu.teamfight.arena.Arena;
-import ua.limefu.teamfight.arena.ArenaList;
+import ua.limefu.teamfight.TeamFight;
+import ua.limefu.teamfight.game.arena.Arena;
+import ua.limefu.teamfight.utils.ArenaUtil;
 
 
 public class Listeners implements Listener {
     private final TeamFight plugin = TeamFight.getInstance();
     private Arena arena;
+
     @EventHandler
-    public void onDamage(EntityDamageByEntityEvent event){
-        if(plugin.getState() != GameState.INGAME){
+    public void onDamage(EntityDamageByEntityEvent event) {
+        if (plugin.getState() != GameState.INGAME) {
             event.setCancelled(true);
-        }else if(plugin.getState() == GameState.INGAME){
+        } else if (plugin.getState() == GameState.INGAME) {
             Player damager;
-            Player damaged = (Player)event.getEntity();
-            arena = ArenaList.getArenaForPlayer(damaged);
-            if (arena!= null) {
+            Player damaged = (Player) event.getEntity();
+            arena = ArenaUtil.getArenaForPlayer(damaged);
+            if (arena != null) {
 
                 if (event.getDamager() instanceof Arrow) {
                     Arrow arrow = (Arrow) event.getDamager();
@@ -50,12 +51,12 @@ public class Listeners implements Listener {
 
     @SuppressWarnings("deprecation")
     @EventHandler
-    public void onDeath(EntityDeathEvent event){
+    public void onDeath(EntityDeathEvent event) {
 
-        if(event.getEntity() instanceof Player) {
+        if (event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
             Player killer = player.getKiller();
-            arena = ArenaList.getArenaForPlayer(player);
+            arena = ArenaUtil.getArenaForPlayer(player);
             if (arena != null) {
 
                 event.getDrops().clear();
@@ -78,19 +79,20 @@ public class Listeners implements Listener {
     @EventHandler
     public void onRegen(EntityRegainHealthEvent event) {
         Player player = (Player) event.getEntity();
-        arena = ArenaList.getArenaForPlayer(player);
+        arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
             if (plugin.getState() == GameState.INGAME) {
                 event.setCancelled(true);
             }
         }
     }
+
     @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event){
+    public void onBlockPlace(BlockPlaceEvent event) {
 
         Location targetBlockLocation = event.getBlock().getLocation();
         Player player = event.getPlayer();
-        Arena arena = ArenaList.getArenaForPlayer(player);
+        Arena arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
             if (plugin.getMaputil().isInside(arena, targetBlockLocation) && plugin.getState() == GameState.INGAME) {
                 event.setCancelled(false);
@@ -104,9 +106,9 @@ public class Listeners implements Listener {
 
 
     @EventHandler
-    public void onBlockBreak(BlockBreakEvent event){
+    public void onBlockBreak(BlockBreakEvent event) {
         Location targetBlockLocation = event.getBlock().getLocation();
-        arena = ArenaList.getArenaForPlayer(event.getPlayer());
+        arena = ArenaUtil.getArenaForPlayer(event.getPlayer());
         if (arena != null) {
 
             if (plugin.getMaputil().isInside(arena, targetBlockLocation) && plugin.getState() == GameState.INGAME) {
@@ -119,9 +121,9 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onMove(PlayerMoveEvent event){
+    public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        arena = ArenaList.getArenaForPlayer(player);
+        arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
 
             if (plugin.getState() == GameState.GRACE && arena.getGraceTime() <= 14 && arena.getGraceTime() >= 0) {
@@ -132,16 +134,16 @@ public class Listeners implements Listener {
 
 
     @EventHandler
-    public void onHunger(FoodLevelChangeEvent event){
+    public void onHunger(FoodLevelChangeEvent event) {
 
         event.setCancelled(true);
 
     }
 
     @EventHandler
-    public void onDamage(EntityDamageEvent event){
+    public void onDamage(EntityDamageEvent event) {
         Player player = (Player) event.getEntity();
-        arena = ArenaList.getArenaForPlayer(player);
+        arena = ArenaUtil.getArenaForPlayer(player);
         if (arena != null) {
             if (plugin.getState() != GameState.INGAME) {
                 event.setCancelled(true);
@@ -150,11 +152,11 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onDamageByEntity(EntityDamageByEntityEvent event){
-        if(event.getEntity() instanceof Player && event.getDamager() instanceof Player){
-            Player damaged = (Player)event.getEntity();
+    public void onDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
+            Player damaged = (Player) event.getEntity();
             Player damager = (Player) event.getDamager();
-            arena = ArenaList.getArenaForPlayer(damaged);
+            arena = ArenaUtil.getArenaForPlayer(damaged);
             if (arena != null) {
                 if (plugin.getState() != GameState.INGAME) {
                     event.setCancelled(true);
@@ -174,10 +176,10 @@ public class Listeners implements Listener {
             }
         }
     }
+
     @EventHandler
-    public void onItemDrop(PlayerDropItemEvent event)
-    {
-            event.setCancelled(true);
+    public void onItemDrop(PlayerDropItemEvent event) {
+        event.setCancelled(true);
 
     }
 }
